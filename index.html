@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ffafbd, #ffc3a0);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .page {
+            display: none;
+            margin: auto;
+            max-width: 400px;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.8);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        h2 {
+            margin: 20px 0 10px;
+            font-size: 20px;
+        }
+        input[type="text"], input[type="date"], input[type="time"], select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #ff4d4d;
+        }
+        .class-item, .attendance-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            height: 50px;
+            align-items: center;
+        }
+        .class-item button, .attendance-item button {
+            background-color: #ff3e3e;
+            transition: background-color 0.3s ease;
+        }
+        .class-item button:hover, .attendance-item button:hover {
+            background-color: #c73030;
+        }
+        .logo {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .back-button {
+            background-color: #555;
+            margin-top: 20px;
+        }
+        .back-button:hover {
+            background-color: #444;
+        }
+        .class-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .class-buttons button {
+            margin: 5px;
+            width: 80%;
+        }
+        .attendance-code-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .attendance-code-buttons button {
+            margin: 5px;
+            width: 60%;
+        }
+        .search-bar {
+            margin-top: 20px;
+        }
+        .search-bar input {
+            width: 80%;
+            padding: 8px;
+            font-size: 16px;
+        }
+        .print-button {
+            background-color: #00c851;
+            margin-top: 10px;
+        }
+        .print-button:hover {
+            background-color: #007e33;
+        }
+    </style>
+</head>
+<body>
+
+<div id="homePage" class="page">
+    <h1>Welcome to the Attendance App</h1>
+    <h2>Select Class for Attendance</h2>
+    
+    <div class="class-buttons">
+        <button onclick="showAttendanceCodes('SCIENCE BIOLOGY')">SCIENCE BIOLOGY</button>
+        <button onclick="showAttendanceCodes('SCIENCE COMPUTER')">SCIENCE COMPUTER</button>
+        <button onclick="showAttendanceCodes('COMMERCE MATHS')">COMMERCE MATHS</button>
+        <button onclick="showAttendanceCodes('COMMERCE COMPUTER')">COMMERCE COMPUTER</button>
+        <button onclick="showAttendanceCodes('HUMANITIES')">HUMANITIES</button>
+    </div>
+    
+    <div id="attendanceCodes" class="attendance-code-buttons" style="display: none;"></div>
+    <button class="back-button" onclick="resetPage()">Reset App</button>
+</div>
+
+<div id="attendancePage" class="page">
+    <h1 id="classTitle">Attendance</h1>
+    <form id="attendanceForm">
+        <input type="text" id="studentName" placeholder="Student Name" required>
+        <input type="date" id="date" required>
+        <input type="time" id="time" required>
+        <select id="lateStatus" required>
+            <option value="" disabled selected>Late Status</option>
+            <option value="On Time">On Time</option>
+            <option value="Late Morning">Late Morning</option>
+            <option value="Late Afternoon">Late Afternoon</option>
+        </select>
+        <button type="submit">Submit Attendance</button>
+    </form>
+    
+    <h2>Attendance List</h2>
+
+    <div class="search-bar">
+        <input type="text" id="searchInput" oninput="filterAttendance()" placeholder="Search by student name...">
+    </div>
+    
+    <div id="attendanceList"></div>
+
+    <button class="print-button" onclick="printAttendance()">Print Attendance</button>
+    <button class="back-button" onclick="switchPage('homePage')">Back to Classes</button>
+</div>
+
+<script>
+    let attendanceData = JSON.parse(localStorage.getItem('attendanceData')) || {};
+
+    function showAttendanceCodes(className) {
+        document.getElementById("attendanceCodes").style.display = 'none';
+        const attendanceCodes = document.getElementById("attendanceCodes");
+        attendanceCodes.innerHTML = '';
+        let codes = [];
+
+        switch (className) {
+            case 'SCIENCE BIOLOGY':
+                codes = ['SA1', 'SB1', 'SA2', 'SB2'];
+                break;
+            case 'SCIENCE COMPUTER':
+                codes = ['SC1', 'SC2'];
+                break;
+            case 'COMMERCE MATHS':
+                codes = ['CM1', 'CM2'];
+                break;
+            case 'COMMERCE COMPUTER':
+                codes = ['CC1', 'CC2'];
+                break;
+            case 'HUMANITIES':
+                codes = ['HA1', 'HB1', 'HA2', 'HB2'];
+                break;
+        }
+
+        codes.forEach(code => {
+            const button = document.createElement("button");
+            button.innerText = code;
+            button.onclick = () => startAttendance(className, code);
+            attendanceCodes.appendChild(button);
+        });
+
+        attendanceCodes.style.display = 'flex';
+    }
+
+    function startAttendance(className, code) {
+        const classCode = `${className}-${code}`;
+        document.getElementById("classTitle").innerText = `Attendance for ${className} (${code})`;
+        loadAttendance(classCode);
+        switchPage("attendancePage");
+    }
+
+    function loadAttendance(classCode) {
+        const attendanceList = document.getElementById("attendanceList");
+        attendanceList.innerHTML = '';
+        if (attendanceData[classCode]) {
+            attendanceData[classCode].forEach(item => {
+                const attendanceItem = document.createElement("div");
+                attendanceItem.className = "attendance-item";
+                attendanceItem.innerHTML = `${item.studentName} - ${item.date} - ${item.time} - ${item.lateStatus}`;
+                attendanceList.appendChild(attendanceItem);
+            });
+        }
+    }
+
+    document.getElementById("attendanceForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const studentName = document.getElementById("studentName").value;
+        const classTitle = document.getElementById("classTitle").innerText;
+        const classCode = classTitle.replace('Attendance for ', '').trim();
+        const date = document.getElementById("date").value;
+        const time = document.getElementById("time").value;
+        const lateStatus = document.getElementById("lateStatus").value;
+
+        if (!attendanceData[classCode]) {
+            attendanceData[classCode] = [];
+        }
+
+        attendanceData[classCode].push({ studentName, date, time, lateStatus });
+        saveAttendanceData();
+        loadAttendance(classCode);
+        document.getElementById("attendanceForm").reset();
+    });
+
+    function saveAttendanceData() {
+        localStorage.setItem('attendanceData', JSON.stringify(attendanceData));
+    }
+
+    function switchPage(pageId) {
+        const pages = document.getElementsByClassName("page");
+        for (let i = 0; i < pages.length; i++) {
+            pages[i].style.display = 'none';
+        }
+        document.getElementById(pageId).style.display = 'block';
+    }
+
+    function resetPage() {
+        if (confirm("Are you sure you want to reset the app? This will delete all attendance data.")) {
+            localStorage.clear();
+            attendanceData = {};
+            location.reload();
+        }
+    }
+
+    function filterAttendance() {
+        const searchValue = document.getElementById("searchInput").value.toLowerCase();
+        const attendanceList = document.getElementById("attendanceList");
+        const items = attendanceList.getElementsByClassName("attendance-item");
+        for (let i = 0; i < items.length; i++) {
+            const text = items[i].textContent.toLowerCase();
+            items[i].style.display = text.includes(searchValue) ? "" : "none";
+        }
+    }
+
+    function printAttendance() {
+        const classTitle = document.getElementById("classTitle").innerText;
+        const printWindow = window.open('', '', 'height=600,width=800');
+        printWindow.document.write('<html><head><title>Print Attendance</title></head><body>');
+        printWindow.document.write('<h1>' + classTitle + '</h1>');
+        printWindow.document.write(document.getElementById("attendanceList").innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    switchPage('homePage');
+</script>
+
+</body>
+</html>
